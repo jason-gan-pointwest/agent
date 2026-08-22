@@ -2,6 +2,8 @@ name: Run Coding Agent
 
 on:
   workflow_dispatch:
+  issues:
+    types: [opened, labeled]
 
 jobs:
   run-coding-agent:
@@ -10,7 +12,13 @@ jobs:
       - name: Checkout all repos
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          PROMPT: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+
         run: |
+          FEATURE_BRANCH="feature/change-01"
+          PR_TITLE="change-01"
+
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
@@ -28,27 +36,34 @@ jobs:
 
           for entry in "${REPOS[@]}"; do
             REPO_URL="${entry%#*}"
-            BRANCH="${entry#*#}"
-            TARGET_DIR=$(basename "$REPO_URL" .git)
-            AUTH_URL=$(echo "$REPO_URL" | sed "s#https://#https://oauth2:${GITLAB_TOKEN}@#")
+            TARGET_BRANCH="${entry#*#}"
+            REPO_NAME=$(basename "$REPO_URL" .git)
+            REPO_URL=$(echo "$REPO_URL" | sed "s#https://#https://oauth2:${GITLAB_TOKEN}@#")
 
-            echo "Processing $TARGET_DIR..."
-
-            git clone --branch $BRANCH --single-branch --depth 1 "$AUTH_URL" "$TARGET_DIR"
-            
-            # Use a subshell ( ... ) so 'cd' automatically resets after each loop iteration
+            echo "Checking out $REPO_NAME..."
+            git clone --branch $TARGET_BRANCH --single-branch --depth 1 "$REPO_URL" "$REPO_NAME"
             (
-              cd "$TARGET_DIR" || exit 1
-              git checkout -b feature/changes
-              
-              echo "START======================"
-              pwd
-              ls
-              git status
-              echo "END======================"
+              cd "$REPO_NAME" || exit 1
+              git checkout -b $FEATURE_BRANCH
             )
           done
-          echo "START======================"
-          pwd
-          ls
-          echo "END======================"
+
+          echo "Installing coding agent..."
+          npm install -g @github/copilot-cli
+
+          echo "Running coding agent..."
+          copilot -p "$PROMPT" --no-ask-user --allow-all-tools --model gpt-5.4
+
+          for entry in "${REPOS[@]}"; do
+            REPO_URL="${entry%#*}"
+            TARGET_BRANCH="${entry#*#}"
+            REPO_NAME=$(basename "$REPO_URL" .git)
+
+            (
+              cd "$REPO_NAME" || exit 1
+              if [ -n "$(git status --porcelain)" ]; then
+                echo "Creating PR for $REPO_NAME..."
+                git push origin $FEATURE_BRANCH -o merge_request.create -o merge_request.title="$PR_TITLE" -o merge_request.target="$TARGET_BRANCH"
+              fi
+            )
+          done
