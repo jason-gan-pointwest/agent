@@ -12,6 +12,7 @@ jobs:
       - name: Checkout all repos
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           PROMPT: ${{ github.event.issue.body }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
 
@@ -58,7 +59,6 @@ jobs:
             REPO_URL="${entry%#*}"
             TARGET_BRANCH="${entry#*#}"
             REPO_NAME=$(basename "$REPO_URL" .git)
-
             (
               cd "$REPO_NAME" || exit 1
               if [ -n "$(git status --porcelain)" ]; then
