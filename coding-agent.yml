@@ -41,7 +41,7 @@ jobs:
               cd "$TARGET_DIR" || exit 1
               git checkout -b feature/changes
               
-              echo "====================="
+              echo "======================"
               pwd
               ls
               git status
