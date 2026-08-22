@@ -57,7 +57,7 @@ jobs:
           done
 
           echo "Installing coding agent..."
-          npm install -g @github/copilot-cli
+          npm install -g @github/copilot
 
           echo "Running coding agent..."
           copilot -p "$PROMPT" --no-ask-user --allow-all-tools --model gpt-5.4
