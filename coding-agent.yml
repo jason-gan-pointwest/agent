@@ -1,0 +1,49 @@
+name: Run Coding Agent
+
+on:
+  workflow_dispatch:
+
+jobs:
+  process-repos-seq:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout all repos
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          REPOS=(
+            "https://gitlab.com/pcahub/cc-api.git#master"
+            "https://gitlab.com/pcahub/cc-api-config.git#master"
+            "https://gitlab.com/pcahub/eoa-api.git#master"
+            "https://gitlab.com/pcahub/eoa-api-config.git#master"
+            "https://gitlab.com/pcahub/pos-api.git#master"
+            "https://gitlab.com/pcahub/pos-api-config.git#master"
+            "https://gitlab.com/pcahub/pos-punchout-api.git#master"
+            "https://gitlab.com/pcahub/pos-punchout-api-config.git#master"
+            "https://gitlab.com/pcahub/pos-web.git#master"
+          )
+
+          for entry in "${REPOS[@]}"; do
+            REPO_URL="${entry%#*}"
+            BRANCH="${entry#*#}"
+            TARGET_DIR=$(basename "$REPO_URL" .git)
+            AUTH_URL=$(echo "$REPO_URL" | sed "s#https://#https://oauth2:${GITLAB_TOKEN}@#")
+
+            echo "Processing $TARGET_DIR..."
+
+            git clone --branch $BRANCH --single-branch --depth 1 "$AUTH_URL" "$TARGET_DIR"
+            
+            # Use a subshell ( ... ) so 'cd' automatically resets after each loop iteration
+            (
+              cd "$TARGET_DIR" || exit 1
+              git checkout -b feature/changes
+              
+              echo "====================="
+              pwd
+              ls
+              git status
+            )
+          done
