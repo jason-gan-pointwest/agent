@@ -9,14 +9,21 @@ jobs:
   run-coding-agent:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout all repos
+      - name: Checkout agent repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Checkout project repos
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-          PROMPT: ${{ github.event.issue.body }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
 
         run: |
+          PROMPT="${ISSUE_TITLE}"$'\n\n'"${ISSUE_BODY}"
           FEATURE_BRANCH="feature/change-01"
           PR_TITLE="change-01"
 

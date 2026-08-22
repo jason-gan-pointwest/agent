@@ -1,5 +1,5 @@
 # Project Layout
-The project contains the frontend web application and multiple backend services, each with its own subdirectory:
+This project contains the following applications, each in a subdirectory:
 
 - **Frontend Web Application**
   - Location: `/pos-web`
