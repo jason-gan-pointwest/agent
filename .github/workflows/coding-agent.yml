@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Checkout project repos
+      - name: Checkout project repos and run coding agent
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
@@ -73,6 +73,8 @@ jobs:
               cd "$REPO_NAME" || exit 1
               if [ -n "$(git status --porcelain)" ]; then
                 echo "Creating PR for $REPO_NAME..."
+                git add .
+                git commit -m "$PR_TITLE"
                 git push origin $FEATURE_BRANCH -o merge_request.create -o merge_request.title="$PR_TITLE" -o merge_request.target="$TARGET_BRANCH"
               fi
             )
