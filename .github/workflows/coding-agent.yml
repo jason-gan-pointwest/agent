@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  process-repos-seq:
+  run-coding-agent:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout all repos
