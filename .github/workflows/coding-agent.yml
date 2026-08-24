@@ -24,14 +24,14 @@ jobs:
 
         run: |
           PROMPT="${ISSUE_TITLE}"$'\n\n'"${ISSUE_BODY}"
-          FEATURE_BRANCH="feature/change-02"
-          PR_TITLE="change-02"
+          FEATURE_BRANCH="feature/change-$ISSUE_NUMBER"
+          PR_TITLE="change-$ISSUE_NUMBER"
 
           echo "Running coding agent for the following issue:"
           echo "$ISSUE_TITLE"
 
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "PTC-Coder-02"
+          git config --global user.email "coding.agent.02@pointwest.com"
 
           REPOS=(
             "https://gitlab.com/pcahub/cc-api.git#master"
