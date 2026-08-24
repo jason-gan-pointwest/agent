@@ -24,8 +24,8 @@ jobs:
 
         run: |
           PROMPT="${ISSUE_TITLE}"$'\n\n'"${ISSUE_BODY}"
-          FEATURE_BRANCH="feature/change-01"
-          PR_TITLE="change-01"
+          FEATURE_BRANCH="feature/change-02"
+          PR_TITLE="change-02"
 
           echo "Running coding agent for the following issue:"
           echo "$ISSUE_TITLE"
