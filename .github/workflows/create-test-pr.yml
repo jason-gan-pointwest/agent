@@ -1,10 +1,10 @@
-name: Run Coding Agent
+name: Create Test PR
 
 on:
   workflow_dispatch:
 
 jobs:
-  run-coding-agent:
+  create-test-pr:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout agent repo
