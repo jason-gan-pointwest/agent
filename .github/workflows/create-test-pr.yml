@@ -35,11 +35,8 @@ jobs:
           PR_TITLE="Greeting-$RUN_NUMBER"
 
           echo "Installing gitlab cli..."
-          sudo snap install glab
-          echo "Updating permission..."
-          sudo chown -R $USER:$USER /home/runner/.config
+          curl -sSL "https://gitlab.com/gitlab-org/cli/raw/main/scripts/install.sh" | sudo sh
           glab auth login --token "$GITLAB_TOKEN" --hostname "$GITLAB_HOST"
-
 
           git config --global user.name "PTC-Coder-02"
           git config --global user.email "coding.agent.02@pointwest.com"
