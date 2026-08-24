@@ -36,6 +36,7 @@ jobs:
 
           echo "Installing gitlab cli..."
           sudo snap install glab
+          echo "Updating permission..."
           sudo chown -R $USER:$USER /home/runner/.config
           glab auth login --token "$GITLAB_TOKEN" --hostname "$GITLAB_HOST"
 
