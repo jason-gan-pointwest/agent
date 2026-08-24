@@ -35,7 +35,7 @@ jobs:
           PR_TITLE="Greeting-$RUN_NUMBER"
 
           echo "Installing gitlab cli..."
-          sudo snap install glab
+          snap install glab
           glab auth login --token "$GITLAB_TOKEN" --hostname "$GITLAB_HOST"
 
 
