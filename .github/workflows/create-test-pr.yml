@@ -62,6 +62,8 @@ jobs:
           git add .
           git commit -m "$PR_TITLE"
 
+          echo "PR_TITLE: $PR_TITLE"
+
           MR_URL=$(glab mr create \
             --title "$PR_TITLE" \
             --source-branch $FEATURE_BRANCH \
