@@ -34,8 +34,8 @@ jobs:
           FEATURE_BRANCH="feature/greeting-$RUN_NUMBER"
           PR_TITLE="Greeting-$RUN_NUMBER"
 
-          echo "Installing gitlab cli..."
-          curl -sSL "https://gitlab.com/gitlab-org/cli/raw/main/scripts/install.sh" | sudo sh
+          echo "Installing gitlab cli and authenticate..."
+          sudo apt install glab
           glab auth login --token "$GITLAB_TOKEN" --hostname "$GITLAB_HOST"
 
           git config --global user.name "PTC-Coder-02"
