@@ -16,6 +16,7 @@ jobs:
 
       - name: Checkout project repos and run coding agent
         env:
+          GITLAB_HOST: github.com
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
@@ -45,22 +46,28 @@ jobs:
             "https://gitlab.com/pcahub/pos-web.git#master"
           )
 
+          echo "Installing coding agent..."
+          npm install -g @github/copilot
+
+          echo "Installing gitlab cli..."
+          sudo apt install glab
+
+          echo "Authenticating using gitlab cli..."
+          glab auth login --token "$GITLAB_TOKEN" --hostname "$GITLAB_HOST"
+
           for entry in "${REPOS[@]}"; do
             REPO_URL="${entry%#*}"
             TARGET_BRANCH="${entry#*#}"
             REPO_NAME=$(basename "$REPO_URL" .git)
             REPO_URL=$(echo "$REPO_URL" | sed "s#https://#https://oauth2:${GITLAB_TOKEN}@#")
 
-            echo "Checking out $REPO_NAME..."
+            echo "Cloning $REPO_NAME..."
             git clone --branch $TARGET_BRANCH --single-branch --depth 1 "$REPO_URL" "$REPO_NAME"
             (
               cd "$REPO_NAME" || exit 1
               git checkout -b $FEATURE_BRANCH
             )
           done
-
-          echo "Installing coding agent..."
-          npm install -g @github/copilot
 
           echo "Running coding agent..."
           copilot -p "$PROMPT" --no-ask-user --allow-all-tools --model gpt-5.4
@@ -75,7 +82,8 @@ jobs:
                 echo "Creating PR for $REPO_NAME..."
                 git add .
                 git commit -m "$PR_TITLE"
-                git push origin $FEATURE_BRANCH -o merge_request.create -o merge_request.title="$PR_TITLE" -o merge_request.target="$TARGET_BRANCH"
+                PR_URL=$(glab mr create --fill --source-branch $FEATURE_BRANCH --target-branch $TARGET_BRANCH --push --yes)
+                echo "PR created: $PR_URL"
               fi
             )
           done
