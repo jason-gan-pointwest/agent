@@ -1,0 +1,58 @@
+name: Run Coding Agent
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-coding-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout agent repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Checkout project repos and run coding agent
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          RUN_NUMBER: ${{ github.run_number }}
+
+        run: |
+          FEATURE_BRANCH="feature/greeting-$RUN_NUMBER"
+          PR_TITLE="Greeting-$RUN_NUMBER"
+
+          git config --global user.name "PTC-Coder-02"
+          git config --global user.email "coding.agent.02@pointwest.com"
+
+          REPOS=(
+            "https://gitlab.com/pcahub/cc-api.git#master"
+            "https://gitlab.com/pcahub/cc-api-config.git#master"
+            "https://gitlab.com/pcahub/eoa-api.git#master"
+            "https://gitlab.com/pcahub/eoa-api-config.git#master"
+            "https://gitlab.com/pcahub/pos-api.git#master"
+            "https://gitlab.com/pcahub/pos-api-config.git#master"
+            "https://gitlab.com/pcahub/pos-punchout-api.git#master"
+            "https://gitlab.com/pcahub/pos-punchout-api-config.git#master"
+            "https://gitlab.com/pcahub/pos-web.git#master"
+          )
+
+          for entry in "${REPOS[@]}"; do
+            REPO_URL="${entry%#*}"
+            TARGET_BRANCH="${entry#*#}"
+            REPO_NAME=$(basename "$REPO_URL" .git)
+            REPO_URL=$(echo "$REPO_URL" | sed "s#https://#https://oauth2:${GITLAB_TOKEN}@#")
+
+            echo "Checking out $REPO_NAME..."
+            git clone --branch $TARGET_BRANCH --single-branch --depth 1 "$REPO_URL" "$REPO_NAME"
+            (
+              cd "$REPO_NAME" || exit 1
+              git checkout -b $FEATURE_BRANCH
+            )
+          done
+
+          echo "Creating PR in pos-web..."
+          cd pos-web
+          echo hello > greeting.txt
+          git add .
+          git commit -m "Greeting"
+          git push origin $FEATURE_BRANCH -o merge_request.create -o merge_request.title="$PR_TITLE" -o merge_request.target="$TARGET_BRANCH"
