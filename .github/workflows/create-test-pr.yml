@@ -62,13 +62,6 @@ jobs:
           git add .
           git commit -m "$PR_TITLE"
 
-          echo "PR_TITLE: $PR_TITLE"
-
-          MR_URL=$(glab mr create \
-            --title "$PR_TITLE" \
-            --source-branch $FEATURE_BRANCH \
-            --target-branch $TARGET_BRANCH \
-            --push \
-            --yes)
+          MR_URL=$(glab mr create --title "$PR_TITLE" --source-branch $FEATURE_BRANCH --target-branch $TARGET_BRANCH --push --yes)
 
           echo "MR created: $MR_URL"
