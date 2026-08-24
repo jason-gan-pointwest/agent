@@ -18,12 +18,6 @@ jobs:
           RUN_NUMBER: ${{ github.run_number }}
 
         run: |
-          FEATURE_BRANCH="feature/greeting-$RUN_NUMBER"
-          PR_TITLE="Greeting-$RUN_NUMBER"
-
-          git config --global user.name "PTC-Coder-02"
-          git config --global user.email "coding.agent.02@pointwest.com"
-
           REPOS=(
             "https://gitlab.com/pcahub/cc-api.git#master"
             "https://gitlab.com/pcahub/cc-api-config.git#master"
@@ -35,6 +29,19 @@ jobs:
             "https://gitlab.com/pcahub/pos-punchout-api-config.git#master"
             "https://gitlab.com/pcahub/pos-web.git#master"
           )
+
+          FEATURE_BRANCH="feature/greeting-$RUN_NUMBER"
+          PR_TITLE="Greeting-$RUN_NUMBER"
+
+          echo "Installing gitlab cli..."
+          curl -sSL https://gitlab-cli.com/install.sh | sudo sh
+
+
+
+
+          git config --global user.name "PTC-Coder-02"
+          git config --global user.email "coding.agent.02@pointwest.com"
+
 
           for entry in "${REPOS[@]}"; do
             REPO_URL="${entry%#*}"
@@ -54,5 +61,13 @@ jobs:
           cd pos-web
           echo hello > greeting.txt
           git add .
-          git commit -m "Greeting"
-          git push origin $FEATURE_BRANCH -o merge_request.create -o merge_request.title="$PR_TITLE" -o merge_request.target="$TARGET_BRANCH"
+          git commit -m "$PR_TITLE"
+
+          MR_URL=$(glab mr create \
+            --title "$PR_TITLE" \
+            --source-branch $FEATURE_BRANCH \
+            --target-branch $TARGET_BRANCH \
+            --push \
+            --yes)
+
+          echo "MR created: $MR_URL"
