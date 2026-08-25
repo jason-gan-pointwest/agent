@@ -1,8 +1,14 @@
 name: Prompt
 description: Prompt for Coding Agent
-labels: ["pca", "scsa"]
 body:
-  - type: textarea
-    id: details
+  - type: dropdown
+    id: school
     attributes:
-      label: Describe the School
+      label: School
+      options:
+        - pca
+        - scsa
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
