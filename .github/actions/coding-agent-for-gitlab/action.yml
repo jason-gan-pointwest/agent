@@ -1,0 +1,81 @@
+name: Coding Agent for GitLab
+description: Coding Agent for GitLab
+
+inputs:
+  repos:
+    description: 'List of repository URLs (one per line)'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout agent repo
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Checkout project repos and run coding agent
+      env:
+        GITLAB_HOST: github.com
+        GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        ISSUE_NUMBER: ${{ github.event.issue.number }}
+        ISSUE_TITLE: ${{ github.event.issue.title }}
+        ISSUE_BODY: ${{ github.event.issue.body }}
+        AGENT_NAME: PTC-Coder-02
+        AGENT_EMAIL: coding.agent.02@pointwest.com
+
+      run: |
+        PROMPT="${ISSUE_TITLE}"$'\n\n'"${ISSUE_BODY}"
+        FEATURE_BRANCH="feature/change-$ISSUE_NUMBER"
+        PR_TITLE="change-$ISSUE_NUMBER"
+
+        readarray -t REPOS <<< "${{ inputs.repos }}"        
+
+        echo "Running coding agent for the following issue:"
+        echo "$ISSUE_TITLE"
+
+        git config --global user.name "$AGENT_NAME"
+        git config --global user.email "$AGENT_EMAIL"
+
+        echo "Installing coding agent..."
+        npm install -g @github/copilot
+
+        echo "Installing gitlab cli..."
+        sudo apt install glab
+
+        echo "Authenticating using gitlab cli..."
+        glab auth login --token "$GITLAB_TOKEN" --hostname "$GITLAB_HOST"
+
+        for entry in "${REPOS[@]}"; do
+          REPO_URL="${entry%#*}"
+          TARGET_BRANCH="${entry#*#}"
+          REPO_NAME=$(basename "$REPO_URL" .git)
+          REPO_URL=$(echo "$REPO_URL" | sed "s#https://#https://oauth2:${GITLAB_TOKEN}@#")
+
+          echo "Cloning repo $REPO_NAME branch $TARGET_BRANCH..."
+          git clone --branch $TARGET_BRANCH --single-branch --depth 1 "$REPO_URL" "$REPO_NAME"
+          (
+            cd "$REPO_NAME" || exit 1
+            git checkout -b $FEATURE_BRANCH
+          )
+        done
+
+        echo "Running coding agent..."
+        copilot -p "$PROMPT" --no-ask-user --allow-all-tools --model gpt-5.4
+
+        for entry in "${REPOS[@]}"; do
+          REPO_URL="${entry%#*}"
+          TARGET_BRANCH="${entry#*#}"
+          REPO_NAME=$(basename "$REPO_URL" .git)
+          (
+            cd "$REPO_NAME" || exit 1
+            if [ -n "$(git status --porcelain)" ]; then
+              echo "Creating PR to repo $REPO_NAME branch $TARGET_BRANCH..."
+              git add .
+              git commit -m "$PR_TITLE"
+              PR_URL=$(glab mr create --fill --source-branch $FEATURE_BRANCH --target-branch $TARGET_BRANCH --push --yes)
+              echo "PR created: $PR_URL"
+            fi
+          )
+        done

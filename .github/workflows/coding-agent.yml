@@ -9,6 +9,14 @@ jobs:
   run-coding-agent:
     runs-on: ubuntu-latest
     steps:
+      - name: Coding Agent for Gitlab
+        uses: ./.github/actions/coding-agent-for-gitlab
+        with:
+          repos: |
+            https://gitlab.com/account1/repo1
+            https://gitlab.com/account1/repo2    
+
+
       - name: Checkout agent repo
         uses: actions/checkout@v4
         with:

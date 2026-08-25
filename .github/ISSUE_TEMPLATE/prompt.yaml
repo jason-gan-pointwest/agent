@@ -1,0 +1,8 @@
+name: Prompt
+description: Prompt for Coding Agent
+labels: ["pca", "scsa"]
+body:
+  - type: textarea
+    id: details
+    attributes:
+      label: Describe the School
