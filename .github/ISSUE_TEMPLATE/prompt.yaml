@@ -8,7 +8,7 @@ body:
       options:
         - pca
         - scsa
-      default: pca
+      default: 0
     validations:
       required: true
   - type: textarea
